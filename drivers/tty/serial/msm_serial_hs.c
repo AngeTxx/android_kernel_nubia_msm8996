@@ -292,6 +292,9 @@ static int msm_hs_ioctl(struct uart_port *uport, unsigned int cmd,
 	int ret = 0, state = 1;
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 
+	if (!msm_uport)
+		return -ENODEV;
+
 	switch (cmd) {
 	case MSM_ENABLE_UART_CLOCK: {
 		msm_hs_request_clock_on(&msm_uport->uport);
@@ -3131,8 +3134,15 @@ static int msm_hs_pm_sys_suspend_noirq(struct device *dev)
 		return -ENODEV;
 
 	/* client vote is active, fail sys suspend */
+#if 0 // bt modify : let the system to suspend
 	if (atomic_read(&msm_uport->client_count))
 		return -EBUSY;
+#else
+	if (atomic_read(&msm_uport->client_count)) {
+		//return -EBUSY;
+		MSM_HS_ERR("%s(): client count is not zero", __func__);
+	}
+#endif
 
 	MSM_HS_DBG("%s(): suspending", __func__);
 	prev_pwr_state = msm_uport->pm_state;
@@ -3581,6 +3591,13 @@ static void msm_hs_shutdown(struct uart_port *uport)
 
 	dma_unmap_single(uport->dev, msm_uport->tx.dma_base,
 			 UART_XMIT_SIZE, DMA_TO_DEVICE);
+
+	//bt modify : clear the client count
+	if (atomic_read(&msm_uport->client_count)) {
+		atomic_set(&msm_uport->client_count, 0);
+		MSM_HS_ERR("%s(): removing extra client count\n", __func__);
+	}
+	//end
 
 	msm_hs_resource_unvote(msm_uport);
 	rc = atomic_read(&msm_uport->clk_count);
