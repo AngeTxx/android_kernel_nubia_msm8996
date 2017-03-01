@@ -45,7 +45,11 @@
 #define ISPIF_INTF_CMD_DISABLE_IMMEDIATELY    0x02
 
 #define ISPIF_TIMEOUT_SLEEP_US                1000
+#if 0 // ZTEMT: fuyipeng add for slowshutter
 #define ISPIF_TIMEOUT_ALL_US               1000000
+#else
+#define ISPIF_TIMEOUT_ALL_US               1000000000
+#endif
 #define ISPIF_SOF_DEBUG_COUNT                    0
 
 #undef CDBG
