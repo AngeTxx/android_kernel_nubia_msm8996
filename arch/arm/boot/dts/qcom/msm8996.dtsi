@@ -39,7 +39,11 @@
 		i2c7 = &i2c_7;
 		i2c8 = &i2c_8;
 		i2c12 = &i2c_12;
+#ifdef CONFIG_THE_FUCKING_NUBIA // nubia add spi4 (num from 0-5)
+		spi4 = &spi_4;
+#else
 		spi0 = &spi_0;
+#endif
 	};
 
 	psci {
@@ -168,7 +172,11 @@
 		peripheral_mem: peripheral_region@8ea00000 {
 			compatible = "removed-dma-pool";
 			no-map;
+#ifdef CONFIG_THE_FUCKING_NUBIA
+			reg = <0 0x8ea00000 0 0x2d00000>;
+#else
 			reg = <0 0x8ea00000 0 0x2b00000>;
+#endif
 		};
 
 		adsp_mem: adsp_region {
@@ -217,6 +225,16 @@
 			reg = <0 0xb1c00000 0 0x23ff000>;
 			label = "cont_splash_mem_hdmi";
 		};
+
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		pstore_reserve_mem: pstore_reserve_mem_region@9ff00000 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
+			reg = <0x0 0x9ff00000 0x0 0x00100000>;
+			label = "pstore_reserve_mem";
+		};
+#endif
 	};
 };
 
@@ -228,7 +246,9 @@
 #include "msm-gdsc-8996.dtsi"
 #include "msm8996-bus.dtsi"
 #include "msm-rdbg.dtsi"
+#ifndef CONFIG_THE_FUCKING_NUBIA
 #include "msm8996-blsp.dtsi"
+#endif
 
 &soc {
 	#address-cells = <1>;
@@ -323,6 +343,18 @@
 			 <&clock_gcc clk_gcc_blsp2_ahb_clk>;
 		clock-names = "core_clk", "iface_clk";
 	};
+
+#ifdef CONFIG_THE_FUCKING_NUBIA
+	uartblsp2dm2: serial@075b1000 {
+		compatible = "qcom,msm-lsuart-v14";
+		reg = <0x75b1000 0x1000>;
+		interrupts = <0 115 0>;
+		status = "disabled";
+		clocks = <&clock_gcc clk_gcc_blsp2_uart3_apps_clk>,
+			 <&clock_gcc clk_gcc_blsp2_ahb_clk>;
+		clock-names = "core_clk", "iface_clk";
+	};
+#endif
 
 	i2c_12: i2c@75ba000 {
 		compatible = "qcom,i2c-msm-v2";
@@ -419,7 +451,11 @@
 			<&dma_blsp2 15 32 0x20000020 0x20>;
 		dma-names = "tx", "rx";
 		qcom,master-id = <84>;
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		qcom,clk-freq-out = <100000>;
+#else
 		qcom,clk-freq-out = <400000>;
+#endif
 		qcom,clk-freq-in  = <19200000>;
 		clock-names = "iface_clk", "core_clk";
 		clocks = <&clock_gcc clk_gcc_blsp2_ahb_clk>,
@@ -966,7 +1002,11 @@
 						   "cdc-vddpx-1";
 
 			qcom,cdc-micbias1-mv = <1800>;
+#ifdef CONFIG_THE_FUCKING_NUBIA
+			qcom,cdc-micbias2-mv = <2700>;
+#else
 			qcom,cdc-micbias2-mv = <1800>;
+#endif
 			qcom,cdc-micbias3-mv = <1800>;
 			qcom,cdc-micbias4-mv = <1800>;
 
@@ -1751,8 +1791,13 @@
 		reg = <0x9830000 0x1000>;
 		reg-names = "wdt-base";
 		interrupts = <0 28 0>, <0 29 0>;
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		qcom,bark-time = <20000>;
+		qcom,pet-time = <15000>;
+#else
 		qcom,bark-time = <11000>;
 		qcom,pet-time = <10000>;
+#endif
 		qcom,ipi-ping;
 		qcom,wakeup-enable;
 	};
@@ -2050,6 +2095,18 @@
 		qcom,tune2-efuse-bit-pos = <21>;
 		qcom,tune2-efuse-num-bits = <4>;
 		qcom,enable-dpdm-pulsing;
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		qcom,qusb-phy-init-seq = <0xF8 0x80
+					0x03 0x84
+					0x93 0x88
+					0xCF 0x8C
+					0x30 0x08
+					0x79 0x0C
+					0x21 0x10
+					0x14 0x9C
+					0x9F 0x1C
+					0x00 0x18>;
+#else
 		qcom,qusb-phy-init-seq = <0xF8 0x80
 					0xB3 0x84
 					0x83 0x88
@@ -2060,6 +2117,7 @@
 					0x14 0x9C
 					0x9F 0x1C
 					0x00 0x18>;
+#endif
 		phy_type= "utmi";
 
 		clocks = <&clock_gcc clk_gcc_usb_phy_cfg_ahb2phy_clk>,
@@ -2225,7 +2283,9 @@
 		vdd-wlan-io-supply = <&pm8994_s4>;
 		vdd-wlan-xtal-supply = <&pm8994_l30>;
 		vdd-wlan-core-supply = <&pm8994_s3>;
+#ifndef CONFIG_THE_FUCKING_NUBIA
 		wlan-ant-switch-supply = <&pm8994_l18_pin_ctrl>;
+#endif
 		qcom,notify-modem-status;
 		pinctrl-names = "default";
 		pinctrl-0 = <&cnss_default>;
@@ -2365,6 +2425,26 @@
 		qcom,slope = <2901 2846 3200 3200 3200 3200 3200 3200 3200 3200 3200 3200 3200 3200 3200 3200>;
 	};
 
+#ifdef CONFIG_THE_FUCKING_NUBIA // add spi4 (num from 0-5)
+	spi_4: spi@7579000 { /* BLSP1 QUP5 (spi num from 0-6) (QUP num from 1-6) */
+		compatible = "qcom,spi-qup-v2";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg-names = "spi_physical", "spi_bam_physical";
+		reg = <0x07579000 0x600>,
+		      <0x07544000 0x2b000>;
+		interrupt-names = "spi_irq", "spi_bam_irq";
+		interrupts = <0 99 0>, <0 238 0>;
+		spi-max-frequency = <19200000>;
+
+		qcom,infinite-mode = <0>;
+		qcom,ver-reg-exists;
+		qcom,master-id = <86>;
+
+		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
+			 <&clock_gcc clk_gcc_blsp1_qup5_spi_apps_clk>; //(num for 1-6)
+	};
+#else
 	spi_0: spi@7575000 { /* BLSP1 QUP1 */
 		compatible = "qcom,spi-qup-v2";
 		#address-cells = <1>;
@@ -2392,6 +2472,7 @@
 		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
 			 <&clock_gcc clk_gcc_blsp1_qup1_spi_apps_clk>;
 	};
+#endif
 
 	qcom,rmnet-ipa {
 		compatible = "qcom,rmnet-ipa";
@@ -2734,7 +2815,11 @@
 		reg = <0x70000 0x1000>;
 		qcom,sensor-id = <11>;
 		qcom,poll-ms = <100>;
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		qcom,limit-temp = <80>;
+#else
 		qcom,limit-temp = <60>;
+#endif
 		qcom,temp-hysteresis = <10>;
 		qcom,therm-reset-temp = <115>;
 		qcom,freq-step = <4>;
@@ -2902,7 +2987,11 @@
 			"SpkrLeft IN", "SPK1 OUT",
 			"SpkrRight IN", "SPK2 OUT";
 
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		qcom,msm-mbhc-hphl-swh = <1>;
+#else
 		qcom,msm-mbhc-hphl-swh = <0>;
+#endif
 		qcom,msm-mbhc-gnd-swh = <0>;
 		qcom,tasha-mclk-clk-freq = <9600000>;
 		asoc-platform = <&pcm0>, <&pcm1>, <&pcm2>, <&voip>, <&voice>,
@@ -2913,7 +3002,12 @@
 				"msm-compress-dsp", "msm-pcm-hostless", "msm-pcm-afe",
 				"msm-lsm-client", "msm-pcm-routing", "msm-cpe-lsm",
 				"msm-compr-dsp";
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		asoc-cpu = <&dai_pri_auxpcm>, <&dai_sec_auxpcm>, <&dai_hdmi>,
+				<&dai_tert_mi2s>, <&dai_quat_mi2s>,
+#else
 		asoc-cpu = <&dai_pri_auxpcm>, <&dai_sec_auxpcm>, <&dai_hdmi>, <&dai_mi2s>,
+#endif
 				<&sb_0_rx>, <&sb_0_tx>, <&sb_1_rx>, <&sb_1_tx>,
 				<&sb_2_rx>, <&sb_2_tx>, <&sb_3_rx>, <&sb_3_tx>,
 				<&sb_4_rx>, <&sb_4_tx>, <&sb_5_tx>, <&afe_pcm_rx>,
@@ -2923,6 +3017,9 @@
 				<&sb_5_rx>, <&sb_6_rx>;
 		asoc-cpu-names = "msm-dai-q6-auxpcm.1", "msm-dai-q6-auxpcm.2",
 				"msm-dai-q6-hdmi.8", "msm-dai-q6-mi2s.2",
+#ifdef CONFIG_THE_FUCKING_NUBIA
+				"msm-dai-q6-mi2s.3",
+#endif
 				"msm-dai-q6-dev.16384", "msm-dai-q6-dev.16385",
 				"msm-dai-q6-dev.16386", "msm-dai-q6-dev.16387",
 				"msm-dai-q6-dev.16388", "msm-dai-q6-dev.16389",
@@ -2967,7 +3064,9 @@
 		compatible = "qcom,msm-pcm-dsp";
 		qcom,msm-pcm-dsp-id = <2>;
 		qcom,msm-pcm-low-latency;
+#ifndef CONFIG_THE_FUCKING_NUBIA
 		qcom,latency-level = "ultra";
+#endif
 	};
 
 	routing: qcom,msm-pcm-routing {
@@ -3174,6 +3273,19 @@
 
 	qcom,msm-dai-mi2s {
 		compatible = "qcom,msm-dai-mi2s";
+#ifdef CONFIG_THE_FUCKING_NUBIA
+		dai_tert_mi2s: qcom,msm-dai-q6-mi2s-tert {
+			compatible = "qcom,msm-dai-q6-mi2s";
+			qcom,msm-dai-q6-mi2s-dev-id = <2>;
+			qcom,msm-mi2s-rx-lines = <1>; /* SD0 (1 << 0) */
+			qcom,msm-mi2s-tx-lines = <0>; /* SD1 (1 << 1) */
+			qcom,msm-mi2s-slave = <0>;
+			qcom,msm-mi2s-ext-mclk = <0>;
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&tert_mi2s_active &tert_mi2s_sd0_active>;
+			pinctrl-1 = <&tert_mi2s_sleep &tert_mi2s_sd0_sleep>;
+		};
+#else
 		dai_mi2s: qcom,msm-dai-q6-mi2s-tert {
 			compatible = "qcom,msm-dai-q6-mi2s";
 			qcom,msm-dai-q6-mi2s-dev-id = <2>;
@@ -3183,6 +3295,7 @@
 			pinctrl-0 = <&tert_mi2s_active &tert_mi2s_sd0_active>;
 			pinctrl-1 = <&tert_mi2s_sleep &tert_mi2s_sd0_sleep>;
 		};
+#endif
 
 		dai_mi2s_quat: qcom,msm-dai-q6-mi2s-quat {
 			compatible = "qcom,msm-dai-q6-mi2s";
@@ -3395,6 +3508,23 @@
 			qcom,msm-cpudai-tdm-data-align = <0>;
 		};
 	};
+
+#ifdef CONFIG_THE_FUCKING_NUBIA
+	qcom,msm-dai-mi2s {
+		compatible = "qcom,msm-dai-mi2s";
+		dai_quat_mi2s: qcom,msm-dai-q6-mi2s-quat {
+			compatible = "qcom,msm-dai-q6-mi2s";
+			qcom,msm-dai-q6-mi2s-dev-id = <3>;
+			qcom,msm-mi2s-rx-lines = <2>; /* SD0 (1 << 0) */
+			qcom,msm-mi2s-tx-lines = <1>; /* SD1 (1 << 1) */
+			qcom,msm-mi2s-slave = <0>;
+			qcom,msm-mi2s-ext-mclk = <0>;
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&quat_mi2s_active &quat_mi2s_sd0_active &quat_mi2s_sd1_active>;
+			pinctrl-1 = <&quat_mi2s_sleep &quat_mi2s_sd0_sleep &quat_mi2s_sd1_sleep>;
+		};
+	};
+#endif
 
 	hostless: qcom,msm-pcm-hostless {
 		compatible = "qcom,msm-pcm-hostless";
