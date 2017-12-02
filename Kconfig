@@ -8,4 +8,9 @@ config SRCARCH
 	string
 	option env="SRCARCH"
 
+config THE_FUCKING_NUBIA
+	bool "The Fucking Nubia"
+	help
+	  Nubia hacked these things but they didn't add any ifdefs
+
 source "arch/$SRCARCH/Kconfig"
